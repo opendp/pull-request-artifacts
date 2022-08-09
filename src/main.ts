@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as core from '@actions/core'
 import {context} from '@actions/github';
 import {Octokit} from '@octokit/rest';
+import path from 'path';
 
 async function run(): Promise<void> {
     try {
@@ -12,6 +13,8 @@ async function run(): Promise<void> {
         let artifacts_owner_and_repo = core.getInput('artifacts-repo', {required: false})
         let artifacts_branch = core.getInput('artifacts-branch', {required: false})
         let artifacts_dir = core.getInput('artifacts-dir', {required: false})
+        let inter_link = core.getInput('inter-link', {required: false}) == "true"
+        let title = core.getInput('title', {required: false})
 
         if (!artifacts_token) {
             artifacts_token = local_token
@@ -101,22 +104,25 @@ async function run(): Promise<void> {
         }
 
         const findFileSha = async (filename: string): Promise<string | undefined> => {
+            let file_path = path.join(artifacts_dir, filename)
             try {
                 const files = await artifacts_octokit.rest.repos.getContent({
                     owner: artifacts_owner,
                     repo: artifacts_repo,
-                    path: artifacts_dir,
+                    path: path.dirname(file_path),
                     ref: artifacts_branch,
                 })
 
+
                 if (Array.isArray(files.data)) {
                     for (let i = 0; i < files.data.length; i++) {
-                        if (files.data[i].name == filename) {
+                        if (files.data[i].name == path.basename(file_path)) {
                             return files.data[i].sha
                         }
                     }
                 }
             } catch (error) {
+                console.log("could not find file sha", error)
             }
 
             return undefined
@@ -131,16 +137,19 @@ async function run(): Promise<void> {
                 core.info(`Uploading file ${filename} (first time)`)
             }
 
-            const file_path = artifacts_dir ? `${artifacts_dir}/${filename}` : filename
-
-            const repo_url = `https://github.com/${context.repo.owner}/${context.repo.repo}`
             const short_sha = commit_sha.substring(0, 5)
+            const file_path = path.join(artifacts_dir, filename)
 
-            const message = `Upload ${filename} (${short_sha})
+            let get_inter_link = () => {
+                const repo_url = `https://github.com/${context.repo.owner}/${context.repo.repo}`
+                
+                return `
 
 Pull request: ${repo_url}/pull/${context.issue.number}
-Commit: ${repo_url}/commit/${commit_sha}
-`
+Commit: ${repo_url}/commit/${commit_sha}`
+            }
+
+            const message = `Upload ${file_path} (${short_sha})${inter_link ? get_inter_link() : ""}`;
 
             await artifacts_octokit.rest.repos.createOrUpdateFileContents({
                 owner: artifacts_owner,
@@ -156,24 +165,25 @@ Commit: ${repo_url}/commit/${commit_sha}
             return `${artifacts_repo_url}/blob/${artifacts_branch}/${file_path}?raw=true`
         }
 
-        const title = 'Pull request artifacts'
-        let body = `## 🤖 ${title}
-| file | commit |
-| ---- | ------ |
-`
+        let body = `## ${title}\n`
 
-        for (let artifact of artifact_list.split(/\s+/)) {
-            const path = artifact.trim()
+        console.log("Artifact List:", artifact_list);
+        if (artifact_list.length == 0) return;
+        
+        for (let artifact of artifact_list.split(/\n+/)) {
+            const artifact_path = artifact.trim()
 
-            const basename = path.split('/').reverse()[0]
-            const content = fs.readFileSync(path);
+            const short_path = artifact_path.split('/').slice(-3)
+            const content = fs.readFileSync(artifact_path);
 
-            const target_name = `pr${context.issue.number}-${basename}`
+            const target_name = `${context.issue.number}/${short_path.join("/")}`
             const target_link = await uploadFile(target_name, content);
 
-            body += `| [\`${target_name}\`](${target_link}) | ${commit_sha} |`
+            body += `* [\`${short_path.join("/")}\`](${target_link})`
             body += "\n"
         }
+
+        body += `\nsynchronized with ${commit_sha}`
 
         const comment_id = await findComment(title)
         if (comment_id) {
@@ -182,7 +192,9 @@ Commit: ${repo_url}/commit/${commit_sha}
             await createComment(body)
         }
     } catch (error) {
-        core.setFailed(error.message)
+        let message = 'Unknown Error'
+        if (error instanceof Error) message = error.message
+        core.setFailed(message)
     }
 }
 

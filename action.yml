@@ -22,6 +22,15 @@ inputs:
     required: false
   artifacts-dir:
     description: 'Directory where to upload artifacts (defaults to root directory)'
+    default: ''
+    required: false
+  inter-link:
+    description: 'Whether to link the original PR when committing artifacts'
+    default: true
+    required: false
+  title:
+    description: 'Header to add to comment in the PR.'
+    default: '🤖 Pull request artifacts'
     required: false
 runs:
   using: 'node12'
