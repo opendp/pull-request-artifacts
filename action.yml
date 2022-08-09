@@ -1,5 +1,8 @@
-name: 'Pull Request Artifact'
+name: 'Pull Request Artifact Glob'
 description: 'Post build artifacts in comments to pull request'
+branding:
+  icon: paperclip
+  color: green
 author: 'Victor Gaydov'
 inputs:
   commit:
