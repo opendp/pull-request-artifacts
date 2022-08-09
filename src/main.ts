@@ -156,13 +156,13 @@ async function run(): Promise<void> {
         }
 
         const title = 'Rendered Proofs'
-        let body = `## 🤖 ${title}
+        let body = `## 🤖 ${title} (${commit_sha})
 | file |
 | ---- |
 `
         let artifact_list = glob.sync(glob_pattern);
         if (artifact_list.length == 0) return;
-
+        
         for (let artifact of artifact_list) {
             const path = artifact.trim()
 
