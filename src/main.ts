@@ -161,6 +161,7 @@ async function run(): Promise<void> {
 | ---- |
 `
         let artifact_list = glob.sync(glob_pattern);
+        console.log("Artifact List:", artifact_list);
         if (artifact_list.length == 0) return;
         
         for (let artifact of artifact_list) {
