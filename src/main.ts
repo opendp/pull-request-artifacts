@@ -143,6 +143,7 @@ Pull request: ${repo_url}/pull/${context.issue.number}
 Commit: ${repo_url}/commit/${commit_sha}
 `
 
+            console.log("Creating ref: ", artifacts_branch);
             await artifacts_octokit.rest.git.createRef({
                 owner: artifacts_owner,
                 repo: artifacts_repo,

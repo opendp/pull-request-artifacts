@@ -5,6 +5,9 @@ inputs:
   commit:
     description: 'Commit hash that triggered PR'
     required: true
+  target:
+    description: 'Commit hash that PR is merged into'
+    required: true
   repo-token:
     description: 'Token for current repo (used to post PR comment)'
     required: true
