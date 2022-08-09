@@ -8,7 +8,7 @@ async function run(): Promise<void> {
     try {
         let commit_sha = core.getInput('commit', {required: true})
         let local_token = core.getInput('repo-token', {required: true})
-        let glob_pattern = core.getInput('glob_pattern', {required: true})
+        let glob_pattern = core.getInput('glob-pattern', {required: true})
         let artifacts_token = core.getInput('artifacts-token', {required: false})
         let artifacts_owner_and_repo = core.getInput('artifacts-repo', {required: false})
         let artifacts_branch = core.getInput('artifacts-branch', {required: false})
