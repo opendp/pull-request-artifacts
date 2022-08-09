@@ -2,13 +2,13 @@ import * as fs from 'fs';
 import * as core from '@actions/core'
 import {context} from '@actions/github';
 import {Octokit} from '@octokit/rest';
+import {glob} from "glob";
 
 async function run(): Promise<void> {
     try {
         let commit_sha = core.getInput('commit', {required: true})
-        let target_sha = core.getInput('target', {required: true})
         let local_token = core.getInput('repo-token', {required: true})
-        let artifact_list = core.getInput('artifacts', {required: true})
+        let glob_pattern = core.getInput('glob_pattern', {required: true})
         let artifacts_token = core.getInput('artifacts-token', {required: false})
         let artifacts_owner_and_repo = core.getInput('artifacts-repo', {required: false})
         let artifacts_branch = core.getInput('artifacts-branch', {required: false})
@@ -43,11 +43,6 @@ async function run(): Promise<void> {
                 error: core.error,
             },
         })
-
-        console.log("A ", await artifacts_octokit.rest.repos.get({
-            owner: artifacts_owner,
-            repo: artifacts_repo,
-        }));
 
         if (!artifacts_branch) {
             const repo = await artifacts_octokit.rest.repos.get({
@@ -139,14 +134,12 @@ async function run(): Promise<void> {
 
             const file_path = artifacts_dir ? `${artifacts_dir}/${filename}` : filename
 
-            const repo_url = `https://github.com/${context.repo.owner}/${context.repo.repo}`
+            // const repo_url = `https://github.com/${context.repo.owner}/${context.repo.repo}`
             const short_sha = commit_sha.substring(0, 5)
 
-            const message = `Upload ${filename} (${short_sha})
-
-Pull request: ${repo_url}/pull/${context.issue.number}
-Commit: ${repo_url}/commit/${commit_sha}
-`
+            const message = `Upload ${filename} (${short_sha})`
+            // Pull request: ${repo_url}/pull/${context.issue.number}
+            // Commit: ${repo_url}/commit/${commit_sha}
 
             await artifacts_octokit.rest.repos.createOrUpdateFileContents({
                 owner: artifacts_owner,
@@ -162,22 +155,21 @@ Commit: ${repo_url}/commit/${commit_sha}
             return `${artifacts_repo_url}/blob/${artifacts_branch}/${file_path}?raw=true`
         }
 
-        const title = 'Pull request artifacts'
+        const title = 'Rendered Proofs'
         let body = `## 🤖 ${title}
-| file | commit |
-| ---- | ------ |
+| file |
+| ---- |
 `
-
-        for (let artifact of artifact_list.split(/\s+/)) {
+        for (let artifact of glob.sync(glob_pattern)) {
             const path = artifact.trim()
 
-            const basename = path.split('/').reverse()[0]
+            const basename = path.split('/').slice(-3)
             const content = fs.readFileSync(path);
 
             const target_name = `PR/${context.issue.number}/${basename}`
             const target_link = await uploadFile(target_name, content);
 
-            body += `| [\`${target_name}\`](${target_link}) | ${commit_sha} |`
+            body += `| [\`${basename}\`](${target_link}) | ${commit_sha} |`
             body += "\n"
         }
 
