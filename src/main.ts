@@ -6,7 +6,7 @@ import {Octokit} from '@octokit/rest';
 async function run(): Promise<void> {
     try {
         let commit_sha = core.getInput('commit', {required: true})
-        let target_sha = core.getInput('target' {required: true})  // github.event.release.target_commitish
+        let target_sha = core.getInput('target', {required: true})
         let local_token = core.getInput('repo-token', {required: true})
         let artifact_list = core.getInput('artifacts', {required: true})
         let artifacts_token = core.getInput('artifacts-token', {required: false})
@@ -43,6 +43,11 @@ async function run(): Promise<void> {
                 error: core.error,
             },
         })
+
+        console.log("A ", await artifacts_octokit.rest.repos.get({
+            owner: artifacts_owner,
+            repo: artifacts_repo,
+        }));
 
         if (!artifacts_branch) {
             const repo = await artifacts_octokit.rest.repos.get({
