@@ -148,14 +148,6 @@ Pull request: ${repo_url}/pull/${context.issue.number}
 Commit: ${repo_url}/commit/${commit_sha}
 `
 
-            console.log("Creating ref: ", artifacts_branch);
-            await artifacts_octokit.rest.git.createRef({
-                owner: artifacts_owner,
-                repo: artifacts_repo,
-                ref: `refs/heads/${artifacts_branch}`,
-                sha: target_sha,
-            })
-
             await artifacts_octokit.rest.repos.createOrUpdateFileContents({
                 owner: artifacts_owner,
                 repo: artifacts_repo,
@@ -182,7 +174,7 @@ Commit: ${repo_url}/commit/${commit_sha}
             const basename = path.split('/').reverse()[0]
             const content = fs.readFileSync(path);
 
-            const target_name = `pr${context.issue.number}-${basename}`
+            const target_name = `PR/${context.issue.number}/${basename}`
             const target_link = await uploadFile(target_name, content);
 
             body += `| [\`${target_name}\`](${target_link}) | ${commit_sha} |`
