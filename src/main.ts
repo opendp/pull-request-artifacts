@@ -160,7 +160,10 @@ async function run(): Promise<void> {
 | file |
 | ---- |
 `
-        for (let artifact of glob.sync(glob_pattern)) {
+        let artifact_list = glob.sync(glob_pattern);
+        if (artifact_list.length == 0) return;
+
+        for (let artifact of artifact_list) {
             const path = artifact.trim()
 
             const basename = path.split('/').slice(-3)
@@ -169,7 +172,7 @@ async function run(): Promise<void> {
             const target_name = `PR/${context.issue.number}/${basename}`
             const target_link = await uploadFile(target_name, content);
 
-            body += `| [\`${basename}\`](${target_link}) | ${commit_sha} |`
+            body += `| [\`${basename}\`](${target_link}) |`
             body += "\n"
         }
 
