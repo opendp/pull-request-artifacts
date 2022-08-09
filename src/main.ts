@@ -183,7 +183,9 @@ async function run(): Promise<void> {
             await createComment(body)
         }
     } catch (error) {
-        core.setFailed(error.message)
+        let message = 'Unknown Error'
+        if (error instanceof Error) message = error.message
+        core.setFailed(message)
     }
 }
 
