@@ -58,6 +58,7 @@ function run() {
             let artifacts_branch = core.getInput('artifacts-branch', { required: false });
             let artifacts_dir = core.getInput('artifacts-dir', { required: false });
             let inter_link = core.getInput('inter-link', { required: false }) == "true";
+            let post_comment = core.getInput('post-comment', { required: false }) == "true";
             let title = core.getInput('title', { required: false });
             if (!artifacts_token) {
                 artifacts_token = local_token;
@@ -196,12 +197,14 @@ Commit: ${repo_url}/commit/${commit_sha}`;
                 body += "\n";
             }
             body += `\nsynchronized with ${commit_sha}`;
-            const comment_id = yield findComment(title);
-            if (comment_id) {
-                yield updateComment(comment_id, body);
-            }
-            else {
-                yield createComment(body);
+            if (post_comment) {
+                const comment_id = yield findComment(title);
+                if (comment_id) {
+                    yield updateComment(comment_id, body);
+                }
+                else {
+                    yield createComment(body);
+                }
             }
         }
         catch (error) {

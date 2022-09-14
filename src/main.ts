@@ -14,6 +14,7 @@ async function run(): Promise<void> {
         let artifacts_branch = core.getInput('artifacts-branch', {required: false})
         let artifacts_dir = core.getInput('artifacts-dir', {required: false})
         let inter_link = core.getInput('inter-link', {required: false}) == "true"
+        let post_comment = core.getInput('post-comment', {required: false}) == "true"
         let title = core.getInput('title', {required: false})
 
         if (!artifacts_token) {
@@ -185,11 +186,13 @@ Commit: ${repo_url}/commit/${commit_sha}`
 
         body += `\nsynchronized with ${commit_sha}`
 
-        const comment_id = await findComment(title)
-        if (comment_id) {
-            await updateComment(comment_id, body)
-        } else {
-            await createComment(body)
+        if (post_comment) {
+            const comment_id = await findComment(title)
+            if (comment_id) {
+                await updateComment(comment_id, body)
+            } else {
+                await createComment(body)
+            }
         }
     } catch (error) {
         let message = 'Unknown Error'
