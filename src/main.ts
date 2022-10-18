@@ -177,7 +177,7 @@ Commit: ${repo_url}/commit/${commit_sha}`
             const short_path = artifact_path.split('/').slice(-3)
             const content = fs.readFileSync(artifact_path);
 
-            const target_name = `${context.issue.number}/${short_path.join("/")}`
+            const target_name = short_path.join("/")
             const target_link = await uploadFile(target_name, content);
 
             body += `* [\`${short_path.join("/")}\`](${target_link})`
