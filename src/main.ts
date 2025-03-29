@@ -173,13 +173,10 @@ Commit: ${repo_url}/commit/${commit_sha}`
         
         for (let artifact of artifact_list.split(/\n+/)) {
             const artifact_path = artifact.trim()
-
-            const short_path = artifact_path.split('/').slice(-3)
             const content = fs.readFileSync(artifact_path);
-
             const target_link = await uploadFile(artifact_path, content);
 
-            body += `* [\`${short_path.join("/")}\`](${target_link})`
+            body += `* [\`${artifact_path}\`](${target_link})`
             body += "\n"
         }
 
